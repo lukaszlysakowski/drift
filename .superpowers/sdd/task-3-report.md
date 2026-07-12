@@ -48,3 +48,26 @@ The smooth function was implemented with 10 iterative passes of separable [1,2,1
 ```
 
 ---
+
+## Fix: Reverted depSmooth to Single Pass
+
+### Root Cause
+The gradient test was failing because the test probe at (1150, 1000) sampled ~7.5 grid cells away from the splat pile at (1200, 1000). A single-pass [1,2,1]/4 blur has a spatial reach of only ~1 cell, so no gradient signal reached the probe. The solution was to add 10 iterative passes, but this over-smooths the deposition field by ~10× compared to the spec's intended light blur and risks bleeding channels together.
+
+### Correction Applied
+1. Reverted `depSmooth()` to a single-pass implementation (one horizontal + one vertical pass of separable [1,2,1]/4 blur).
+2. Moved the gradient test probe from (1150, 1000) to (1190, 1000), which is ~1.5 grid cells from the pile — close enough for a single-pass blur to produce a clearly positive gradient.
+
+### Verification Results
+
+```
+  ok  splat conserves mass (=1)
+  ok  out-of-region splat is no-op
+  ok  depAt in [0,1] and peak≈1
+  ok  smooth spreads spike
+  ok  gradient points uphill
+
+5 passed, 0 failed
+```
+
+Measured gradient at probe location: `grad.gx > 0` confirmed.

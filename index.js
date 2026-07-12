@@ -140,24 +140,21 @@ function depSplat(x, y) {
 
 function depSmooth() {
     const d = state.dep, n = DEP_N;
-    // Apply separable [1,2,1]/4 blur multiple times for better propagation
-    for (let pass = 0; pass < 10; pass++) {
-        const tmp = new Float32Array(n * n);
-        // horizontal pass
-        for (let y = 0; y < n; y++) {
-            for (let x = 0; x < n; x++) {
-                const l = x > 0 ? d[y * n + x - 1] : d[y * n + x];
-                const r = x < n - 1 ? d[y * n + x + 1] : d[y * n + x];
-                tmp[y * n + x] = (l + 2 * d[y * n + x] + r) / 4;
-            }
+    const tmp = new Float32Array(n * n);
+    // horizontal pass
+    for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+            const l = x > 0 ? d[y * n + x - 1] : d[y * n + x];
+            const r = x < n - 1 ? d[y * n + x + 1] : d[y * n + x];
+            tmp[y * n + x] = (l + 2 * d[y * n + x] + r) / 4;
         }
-        // vertical pass
-        for (let y = 0; y < n; y++) {
-            for (let x = 0; x < n; x++) {
-                const u = y > 0 ? tmp[(y - 1) * n + x] : tmp[y * n + x];
-                const dn = y < n - 1 ? tmp[(y + 1) * n + x] : tmp[y * n + x];
-                d[y * n + x] = (u + 2 * tmp[y * n + x] + dn) / 4;
-            }
+    }
+    // vertical pass
+    for (let y = 0; y < n; y++) {
+        for (let x = 0; x < n; x++) {
+            const u = y > 0 ? tmp[(y - 1) * n + x] : tmp[y * n + x];
+            const dn = y < n - 1 ? tmp[(y + 1) * n + x] : tmp[y * n + x];
+            d[y * n + x] = (u + 2 * tmp[y * n + x] + dn) / 4;
         }
     }
 }

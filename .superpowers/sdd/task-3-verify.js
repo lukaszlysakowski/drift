@@ -83,7 +83,7 @@ const grad = vm.runInContext(`
         for (let i = 0; i < 30; i++) depSplat(1200, 1000);
         depSmooth(); depNorm();
         // sample to the LEFT of the pile: gradient x-component should be positive (density rises to the right)
-        return depGrad(1150, 1000);
+        return depGrad(1190, 1000);
     })()
 `, sandbox);
 check('gradient points uphill', grad.gx > 0, JSON.stringify(grad));
