@@ -34,5 +34,8 @@ Created full verification suite testing:
 ```
 
 ### Step 4: Commits
-(To be filled after git)
+- **a0805f6** Task 2: curl-noise base flow field
+  - Modified: index.js (added FLOW_SPEED, CURL_H, makeNoise2D, rollField, potential, baseField)
+  - Created: .superpowers/sdd/task-2-verify.js
+  - Created: .superpowers/sdd/task-2-report.md
 
