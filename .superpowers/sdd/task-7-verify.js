@@ -37,10 +37,11 @@ const labels = ['Border', 'Streaks-light', 'Streaks-heavy', 'Channel', 'Signatur
 for (const l of labels) check(`pass present: ${l}`, svg.includes(`inkscape:label="${l}"`));
 check('exactly 5 layer groups', (svg.match(/inkscape:groupmode="layer"/g) || []).length === 5);
 
-// red only in the Channel pass
+// red only in the Channel pass (reference the RED constant, not a hardcoded literal)
+const redHex = vm.runInContext('RED', sandbox);
 const groups = svg.split('<g ').slice(1);
 let redOK = true;
-for (const g of groups) if (g.includes('#A93B2A') && !g.startsWith('id="Channel"')) redOK = false;
+for (const g of groups) if (g.includes(redHex) && !g.startsWith('id="Channel"')) redOK = false;
 check('red only in Channel', redOK);
 
 // Channel pass has exactly one path

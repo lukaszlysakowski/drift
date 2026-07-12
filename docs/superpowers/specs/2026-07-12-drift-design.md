@@ -31,7 +31,8 @@ Decisions made during brainstorming (user-approved):
 ## Page & livery
 
 - Canvas 2170×2170 (`CS = 2170`), `PAD = round(CS·0.04)` (= 87).
-- Paper `#F7E6D4`, ink `#1A1613`, red `#A93B2A` (the main channel is the ONLY red).
+- Paper `#F7E6D4`, ink `#1A1613`, channel `#7C1328` (a darker crimson — the main channel is
+  the ONLY red; deeper than the family brick-red `#A93B2A`).
 - Border rectangle at PAD; signature bottom-left inside border:
   `Drift · seed N · <W> waves · <P> paths  YYYY-MM-DD HH:MM` (W = waves run, P = total paths).
 - House idiom: single `index.html` + `index.js`, vendored `p5.min.js`, no build step.
