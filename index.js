@@ -35,7 +35,55 @@ const state = {
 const ctrlButtons = {};
 
 // --- pipeline hooks (filled in by later tasks) ---
-function rollField() {}
+const FLOW_SPEED = 6;   // target per-step speed in page units
+const CURL_H = 1.5;     // finite-difference step for curl
+
+// Seeded 2-octave value noise — self-contained so canvas and harness agree exactly.
+function makeNoise2D(seed) {
+    function hash(ix, iy) {
+        let h = (Math.imul(ix, 374761393) + Math.imul(iy, 668265263) + Math.imul(seed, 974634167)) | 0;
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    }
+    const smooth = t => t * t * (3 - 2 * t);
+    function vnoise(x, y) {
+        const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+        const a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+        const u = smooth(fx), v = smooth(fy);
+        return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+    }
+    return function fbm(x, y) {
+        return (vnoise(x, y) + 0.5 * vnoise(x * 2.07 + 19.3, y * 2.07 + 7.7)) / 1.5;
+    };
+}
+
+function rollField() {
+    // Field Scale → noise feature size (smaller ns = broader features)
+    const ns = [0.0034, 0.0022, 0.0013][ui.scale];
+    const strength = [0.7, 1.0, 1.45][ui.strength];
+    state.field = {
+        ns, strength,
+        ox: random(1000), oy: random(1000),
+        fbm: makeNoise2D(state.masterSeed + 4099)
+    };
+}
+
+function potential(x, y) {
+    const f = state.field;
+    // scalar streamfunction ψ; amplitude in page units so curl ~ O(1) before normalization
+    return f.fbm(x * f.ns + f.ox, y * f.ns + f.oy) * 900 * f.strength;
+}
+
+function baseField(x, y) {
+    // v = curl(ψ) = (∂ψ/∂y, −∂ψ/∂x), central differences
+    const dpsi_dx = (potential(x + CURL_H, y) - potential(x - CURL_H, y)) / (2 * CURL_H);
+    const dpsi_dy = (potential(x, y + CURL_H) - potential(x, y - CURL_H)) / (2 * CURL_H);
+    let vx = dpsi_dy, vy = -dpsi_dx;
+    const m = Math.hypot(vx, vy);
+    if (m < 1e-9) return { vx: 0, vy: 0 };
+    return { vx: (vx / m) * FLOW_SPEED, vy: (vy / m) * FLOW_SPEED };
+}
+
 function runWaves() {}
 function classifyPaths() {}
 
