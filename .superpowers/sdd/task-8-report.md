@@ -29,13 +29,20 @@ CRITICAL FAILURE — engine issue detected, soak in progress (3/5 seeds)
 **Current runtime:** ~16 minutes (expected ~15-20 total)  
 **All 5 seeds FAIL timeout**: each seed taking 130-155s (4.3-5.1x the 30s budget)
 
-**Completed Seed Results:**
+**Completed Seed Results (4 of 5):**
 ```
   seed 17:     12600 paths, 3335137 verts, 14 waves, ch 11917, 145190ms FAIL
   seed 404:    12600 paths, 3535073 verts, 14 waves, ch 3838,  154332ms FAIL
   seed 9090:   12600 paths, 3073694 verts, 14 waves, ch 1009,  134512ms FAIL
-  (seeds 123456 and 777777 pending)
+  seed 123456: 12600 paths, 3186255 verts, 14 waves, ch 9995,  139479ms FAIL
+  (seed 777777 pending - expected completion within 1-2 minutes)
 ```
+
+Pattern (all 4 seeds identical): 
+- Identical path count (12,600)
+- All hit wave cap (14), no early settle
+- All exceed 30s timeout by 4-5x
+- Consistent delta: no early termination despite settling logic
 
 Consistent pattern: All seeds hit full wave cap (14 waves), generate 12,600 identical paths, 3M+ vertices.
 
