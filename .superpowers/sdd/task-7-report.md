@@ -41,4 +41,7 @@
 ```
 
 ## Commits
-(To be recorded below)
+- `bddbf50` Task 7: SVG pen passes + PNG/PNG-4x export
+  - Added polyToPath, svgPass, buildSVG helper functions
+  - Replaced exportSVG/exportPNG stubs with full implementations
+  - Created and verified task-7-verify.js (14/14 checks pass)
