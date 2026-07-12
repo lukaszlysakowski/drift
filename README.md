@@ -17,6 +17,11 @@ streakline, the trunk the flow carved.
 Static files, no build step: serve the directory (`npx serve . --listen 3464`) and open
 `index.html`.
 
+**Performance.** Drift runs a real advection+deposition simulation, so generation is
+compute-heavy: in the browser a default render (Med count, Light settle) takes ~6s; the
+heaviest setting (Med count, Full settle, 14 waves) ~14s. Lower Count or Settle for faster
+iteration.
+
 ## Controls
 
 - **Field** — Scale (Fine/Med/Broad noise feature size) · Strength (flow speed of the curl field)
