@@ -84,6 +84,33 @@ function baseField(x, y) {
     return { vx: (vx / m) * FLOW_SPEED, vy: (vy / m) * FLOW_SPEED };
 }
 
+// --- Bent field: deposition feedback (slow + divert) ---
+const SLOW = 0.7;
+const DIVERT = 0.9;
+const SLOW_FLOOR = 0.15;
+
+function bentField(x, y) {
+    const v = baseField(x, y);
+    const fb = [0, 0.5, 1][ui.channel];
+    if (fb === 0) return v;
+    const d = depAt(x, y);
+    if (d <= 0) return v;
+    // slow: decelerate in deposited ground, clamped so flow never fully stops
+    const s = Math.max(SLOW_FLOOR, 1 - SLOW * fb * d);
+    // divert: steer along the density contour (perpendicular to gradient), following trails
+    const g = depGrad(x, y);
+    const gm = Math.hypot(g.gx, g.gy);
+    let tx = 0, ty = 0;
+    if (gm > 1e-9) {
+        // rot90 of unit gradient: (−gy, gx)
+        const ux = -g.gy / gm, uy = g.gx / gm;
+        const speed = Math.hypot(v.vx, v.vy);
+        tx = DIVERT * fb * d * ux * speed;
+        ty = DIVERT * fb * d * uy * speed;
+    }
+    return { vx: s * v.vx + tx, vy: s * v.vy + ty };
+}
+
 function runWaves() {}
 function classifyPaths() {}
 
