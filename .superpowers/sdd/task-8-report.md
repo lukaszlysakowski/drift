@@ -50,5 +50,28 @@ Status: 2 of 5 seeds completed (40% done), test running since 3:04 AM (~20+ minu
    - Suggests uncontrolled growth or infinite loop in feedback mechanism
    - At this rate: remaining 3 seeds = ~450s more, total ~25 minutes
 
-**Recommendation**: Investigate engine (index.js) feedback logic and heavy/light path classification before continuing soak. Do NOT lower test thresholds.
+**Root Cause Analysis**
+
+Found in `classifyPaths()` (line 218-230) and `depAt()` (line 311-320):
+
+1. All paths are classified AFTER all waves complete, using the FINAL `state.depMax`
+2. `depAt(x, y)` normalizes by `state.depMax`: `return v / state.depMax`
+3. With `channel=0` (no feedback):
+   - Deposition spreads uniformly over the field
+   - Final `depMax` is lower (spread distribution)
+   - Normalized `depAt` values are HIGHER
+   - More paths exceed HEAVY_THRESH (0.28)
+   - Result: 3185 heavy paths
+4. With `channel=2` (strong feedback):
+   - Deposition concentrates in deep channels
+   - Final `depMax` is MUCH HIGHER (peaks are high)
+   - Normalized `depAt` values are LOWER
+   - Fewer paths exceed HEAVY_THRESH
+   - Result: 344 heavy paths (WRONG!)
+
+**The bug**: Using final `depMax` (which grows with channel strength) inverts the classification. Paths in strong-feedback channels should have HIGHER meanD (higher deposition concentration), not lower.
+
+**Fix required**: Either (a) use fixed normalization for classification, (b) classify paths immediately after each wave before next wave adds deposition, or (c) use raw (unnormalized) deposition sum for threshold instead of normalized meanD.
+
+**Recommendation**: This is a critical Task 6 (classification) issue. Investigate and fix before continuing soak. Do NOT lower test thresholds.
 
