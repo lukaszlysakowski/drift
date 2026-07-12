@@ -162,8 +162,11 @@ interference/.superpowers/sdd/). Per-task verify scripts assert at minimum:
 4. Integration: RK2 path reproducible for a fixed frozen field + start; paths terminate
    (leave region / stall / step cap) — no infinite paths; all paths have ≥ 2 vertices.
 5. Settle: `delta` computed correctly; loop stops at delta < SETTLE_EPS or MAX_WAVES;
-   Settle control caps wavesRun (Off=1); channelization increases the heavy-class fraction
-   as Channel goes Off→Strong (feedback actually deepens channels).
+   Settle control caps wavesRun (Off=1); channelization concentrates deposition into dense
+   trunks + thin tributaries — the skew (max/median of path total-density) FALLS as Channel
+   goes Off→Strong (median pulled down by tributary normalization via raised depMax), and the
+   argmax red-channel path stays heavy-classified. Heavy-class FRACTION also falls under
+   Strong, a expected consequence of concentration raising the normalization ceiling.
 6. Red channel: equals the argmax-total-traversed-density path; is a single path; excluded
    from ink passes.
 7. Determinism: same seed twice → deep-equal path set + wavesRun.
