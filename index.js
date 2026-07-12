@@ -188,14 +188,17 @@ function runWaves() {
         // snapshot deposition before this wave for settle delta
         const before = state.dep.slice();
         const beforeSum = sumArr(before);
-        // release + advect on the CURRENT frozen field
+        // Phase 1: advect ALL particles on the frozen field (no splatting yet)
         const starts = waveStarts(w);
+        const wavePaths = [];
         for (const s of starts) {
             const path = advect(s);
-            if (path.length >= MIN_PTS) {
-                state.paths.push({ pts: path, meanD: 0, totalD: 0, cls: 0 });
-                for (const p of path) depSplat(p.x, p.y);
-            }
+            if (path.length >= MIN_PTS) wavePaths.push(path);
+        }
+        // Phase 2: record + splat all paths, THEN smooth/normalize for the next wave
+        for (const path of wavePaths) {
+            state.paths.push({ pts: path, meanD: 0, totalD: 0, cls: 0 });
+            for (const p of path) depSplat(p.x, p.y);
         }
         depSmooth();
         depNorm();

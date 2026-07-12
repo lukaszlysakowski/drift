@@ -69,3 +69,46 @@ Wall-clock time: 7:03.76 (7 minutes 3.76 seconds)
 
 ### Conclusion
 All 9 checks pass with the symmetric margin. The implementation is correct; the issue was purely in the test tolerance bounds.
+
+## Fix: Two-Phase Wave (Frozen-Field Contract)
+
+### Issue
+The previous `runWaves()` implementation splat particle deposits immediately after advecting each particle:
+```javascript
+for (const s of starts) {
+    const path = advect(s);
+    if (path.length >= MIN_PTS) {
+        state.paths.push({ pts: path, meanD: 0, totalD: 0, cls: 0 });
+        for (const p of path) depSplat(p.x, p.y);  // splat inline
+    }
+}
+```
+
+This caused **intra-wave order dependence**: particle k's advection path could be influenced by the (raw) splatted deposition of particles 1..k-1 in the same wave, via `bentField()` reading the live `state.dep`. This violated the spec's frozen-field contract, which requires each wave to integrate on a FROZEN bent field — feedback happens only BETWEEN waves.
+
+### Solution
+Implemented two-phase advection-then-splat reordering in `runWaves()` (index.js lines 191-201):
+- **Phase 1**: Advect ALL particles on the frozen field (no splatting yet), collecting paths into `wavePaths[]`
+- **Phase 2**: Record all paths to `state.paths[]` and splat all their deposits into `state.dep`
+- Then smooth/normalize for the next wave
+
+This keeps `state.dep` unchanged during the entire wave's advection, making the field genuinely frozen for all particles.
+
+### Full Verify Run Results
+```
+  ok  paths produced
+  ok  all paths have >=2 pts
+  ok  all path vertices in region (±MARGIN exit overshoot)
+  ok  no path exceeds MAX_STEPS+1 vertices
+  ok  Settle Off → wavesRun == 1
+  ok  Settle Full → wavesRun in [1,14]
+  ok  advect reproducible
+  ok  channelization concentrates deposition (Strong > Off)
+  ok  determinism: paths + wavesRun
+
+9 passed, 0 failed
+Wall-clock time: 7:07.45 (7 minutes 7.45 seconds)
+```
+
+### Conclusion
+All 9 checks pass, including the critical determinism and channelization tests. The frozen-field contract is now enforced: each wave's particles advect on an unchanged field, and feedback flows only between waves.
