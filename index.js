@@ -213,15 +213,25 @@ function runWaves() {
     }
 }
 function classifyPaths() {
-    let bestIdx = -1, bestTotal = -1;
+    // The red main channel is the dense path that also SPANS the page — the trunk the flow
+    // carved, not a curl trapped in a single dense vortex. Score = meanD · bbox-diagonal:
+    // meanD demands it be a channel; the spatial span demands it actually go somewhere, so a
+    // tight high-density loop (large totalD, tiny extent) can't win over a long dense trunk.
+    let bestIdx = -1, bestScore = -1;
     for (let i = 0; i < state.paths.length; i++) {
         const p = state.paths[i];
-        let sum = 0;
-        for (const v of p.pts) sum += depAt(v.x, v.y);
+        let sum = 0, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const v of p.pts) {
+            sum += depAt(v.x, v.y);
+            if (v.x < minX) minX = v.x; if (v.x > maxX) maxX = v.x;
+            if (v.y < minY) minY = v.y; if (v.y > maxY) maxY = v.y;
+        }
         p.totalD = sum;
         p.meanD = p.pts.length ? sum / p.pts.length : 0;
         p.cls = p.meanD >= HEAVY_THRESH ? 1 : 0;
-        if (sum > bestTotal) { bestTotal = sum; bestIdx = i; }
+        const span = p.pts.length ? Math.hypot(maxX - minX, maxY - minY) : 0;
+        const score = p.meanD * span;
+        if (score > bestScore) { bestScore = score; bestIdx = i; }
     }
     state.channelIdx = bestIdx;
 }
@@ -357,7 +367,7 @@ function renderAll() {
     // red main channel
     if (state.channelIdx >= 0 && state.paths[state.channelIdx]) {
         stroke(RED);
-        strokeWeight(2.4);
+        strokeWeight(3.8);
         drawPoly(state.paths[state.channelIdx].pts);
     }
     // border + signature
@@ -451,7 +461,7 @@ function buildSVG() {
     s += svgPass('Border', INK, 0.9, [borderPath]);
     s += svgPass('Streaks-light', INK, 0.4, lightPaths);
     s += svgPass('Streaks-heavy', INK, 0.8, heavyPaths);
-    s += svgPass('Channel', RED, 1.1, channelPath ? [channelPath] : []);
+    s += svgPass('Channel', RED, 1.7, channelPath ? [channelPath] : []);
     s += `  <g id="Signature" inkscape:groupmode="layer" inkscape:label="Signature">\n` +
         `    <text x="${PAD}" y="${CS - PAD + 44}" font-family="monospace" font-size="26" ` +
         `fill="${INK}">${signatureText()}</text>\n  </g>\n`;

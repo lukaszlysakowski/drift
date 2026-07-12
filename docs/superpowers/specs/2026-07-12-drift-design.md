@@ -113,8 +113,10 @@ reseeds from `pts[0].x·0.01+50` in both renderers.
 
 - **Streakline class:** for each path compute mean traversed density
   `m = mean(D̂(vertexᵢ))`; class **heavy** if `m ≥ HEAVY_THRESH`, else **light**.
-- **Red channel:** the path with the highest TOTAL traversed density
-  `Σ D̂(vertexᵢ)` (single path). Re-inked red; excluded from the ink passes.
+- **Red channel:** the trunk the flow carved — the single path with the highest
+  `meanD · bbox-diagonal` (dense AND spanning, so a curl trapped in one dense vortex can't
+  win over a long channel that actually crosses the page). Re-inked red at heavier weight;
+  excluded from the ink passes.
 - Draw order (back→front): paper → streaks-light → streaks-heavy → red channel → border →
   signature.
 
@@ -125,7 +127,7 @@ SVG pen passes via family `svgPass(label, color, weight, paths)` — M/L-only pa
 | Border        | ink   | 0.9    |
 | Streaks-light | ink   | 0.4    |
 | Streaks-heavy | ink   | 0.8    |
-| Channel       | red   | 1.1    |
+| Channel       | red   | 1.7    |
 | Signature     | ink   | 0.9    |
 
 - Canvas/SVG parity: identical geometry arrays feed both renderers.
