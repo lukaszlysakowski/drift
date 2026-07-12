@@ -113,6 +113,82 @@ function wobblePts(pts) {
     return pts.map(p => ({ x: p.x + random(-1.2, 1.2), y: p.y + random(-1.2, 1.2) }));
 }
 
+// --- Deposition grid: splat, smooth, normalize, sample ---
+const DEP_AMOUNT = 1;
+
+function pageToGrid(x, y) {
+    const span = CS - 2 * PAD;
+    return { gx: ((x - PAD) / span) * DEP_N, gy: ((y - PAD) / span) * DEP_N };
+}
+
+function depReset() {
+    state.dep = new Float32Array(DEP_N * DEP_N);
+    state.depMax = 1;
+}
+
+function depSplat(x, y) {
+    const { gx, gy } = pageToGrid(x, y);
+    const ix = Math.floor(gx), iy = Math.floor(gy);
+    if (ix < 0 || iy < 0 || ix >= DEP_N - 1 || iy >= DEP_N - 1) return;
+    const fx = gx - ix, fy = gy - iy;
+    const d = state.dep;
+    d[iy * DEP_N + ix]         += DEP_AMOUNT * (1 - fx) * (1 - fy);
+    d[iy * DEP_N + ix + 1]     += DEP_AMOUNT * fx * (1 - fy);
+    d[(iy + 1) * DEP_N + ix]   += DEP_AMOUNT * (1 - fx) * fy;
+    d[(iy + 1) * DEP_N + ix + 1] += DEP_AMOUNT * fx * fy;
+}
+
+function depSmooth() {
+    const d = state.dep, n = DEP_N;
+    // Apply separable [1,2,1]/4 blur multiple times for better propagation
+    for (let pass = 0; pass < 10; pass++) {
+        const tmp = new Float32Array(n * n);
+        // horizontal pass
+        for (let y = 0; y < n; y++) {
+            for (let x = 0; x < n; x++) {
+                const l = x > 0 ? d[y * n + x - 1] : d[y * n + x];
+                const r = x < n - 1 ? d[y * n + x + 1] : d[y * n + x];
+                tmp[y * n + x] = (l + 2 * d[y * n + x] + r) / 4;
+            }
+        }
+        // vertical pass
+        for (let y = 0; y < n; y++) {
+            for (let x = 0; x < n; x++) {
+                const u = y > 0 ? tmp[(y - 1) * n + x] : tmp[y * n + x];
+                const dn = y < n - 1 ? tmp[(y + 1) * n + x] : tmp[y * n + x];
+                d[y * n + x] = (u + 2 * tmp[y * n + x] + dn) / 4;
+            }
+        }
+    }
+}
+
+function depNorm() {
+    let m = 0;
+    const d = state.dep;
+    for (let i = 0; i < d.length; i++) if (d[i] > m) m = d[i];
+    state.depMax = m > 1e-9 ? m : 1;
+}
+
+function depAt(x, y) {
+    const { gx, gy } = pageToGrid(x, y);
+    const ix = Math.floor(gx), iy = Math.floor(gy);
+    if (ix < 0 || iy < 0 || ix >= DEP_N - 1 || iy >= DEP_N - 1) return 0;
+    const fx = gx - ix, fy = gy - iy;
+    const d = state.dep, n = DEP_N;
+    const v = d[iy * n + ix] * (1 - fx) * (1 - fy) + d[iy * n + ix + 1] * fx * (1 - fy) +
+        d[(iy + 1) * n + ix] * (1 - fx) * fy + d[(iy + 1) * n + ix + 1] * fx * fy;
+    return v / state.depMax;
+}
+
+function depGrad(x, y) {
+    const span = CS - 2 * PAD;
+    const h = span / DEP_N; // one cell in page units
+    return {
+        gx: (depAt(x + h, y) - depAt(x - h, y)) / (2 * h),
+        gy: (depAt(x, y + h) - depAt(x, y - h)) / (2 * h)
+    };
+}
+
 function drawPoly(pts) {
     const w = wobblePts(pts);
     beginShape();
