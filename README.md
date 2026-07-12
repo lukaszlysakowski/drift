@@ -12,6 +12,8 @@ and re-bending the field, until the wave-to-wave deposition delta falls below a 
 settles on its own. One red line: the main channel — the single highest-deposition
 streakline, the trunk the flow carved.
 
+**Live maker:** https://lukaszlysakowski.github.io/drift/
+
 ## Running
 
 Static files, no build step: serve the directory (`npx serve . --listen 3464`) and open
