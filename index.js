@@ -418,9 +418,66 @@ function setupControls() {
     document.getElementById('btn-png4').addEventListener('click', () => exportPNG(4));
 }
 
-// export stubs — Task 7 replaces these
-function exportSVG() {}
-function exportPNG(scale) {}
+// Task 7: SVG pen passes + PNG export
+function polyToPath(pts) {
+    const w = wobblePts(pts);
+    let d = `M ${w[0].x.toFixed(2)} ${w[0].y.toFixed(2)}`;
+    for (let i = 1; i < w.length; i++) d += ` L ${w[i].x.toFixed(2)} ${w[i].y.toFixed(2)}`;
+    return d;
+}
+
+function svgPass(label, color, weight, paths) {
+    if (!paths.length) return '';
+    let s = `  <g id="${label}" inkscape:groupmode="layer" inkscape:label="${label}" ` +
+        `stroke="${color}" stroke-width="${weight}" fill="none" ` +
+        `stroke-linecap="round" stroke-linejoin="round">\n`;
+    for (const d of paths) s += `    <path d="${d}"/>\n`;
+    s += '  </g>\n';
+    return s;
+}
+
+function buildSVG() {
+    const lightPaths = [], heavyPaths = [];
+    let channelPath = null;
+    for (let i = 0; i < state.paths.length; i++) {
+        const p = state.paths[i];
+        if (i === state.channelIdx) { channelPath = polyToPath(p.pts); continue; }
+        (p.cls === 1 ? heavyPaths : lightPaths).push(polyToPath(p.pts));
+    }
+    const borderPath = `M ${PAD} ${PAD} L ${CS - PAD} ${PAD} L ${CS - PAD} ${CS - PAD} ` +
+        `L ${PAD} ${CS - PAD} L ${PAD} ${PAD}`;
+    let s = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        `<svg xmlns="http://www.w3.org/2000/svg" ` +
+        `xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" ` +
+        `width="${CS}" height="${CS}" viewBox="0 0 ${CS} ${CS}">\n`;
+    s += `  <rect width="${CS}" height="${CS}" fill="${PAPER}"/>\n`;
+    s += svgPass('Border', INK, 0.9, [borderPath]);
+    s += svgPass('Streaks-light', INK, 0.4, lightPaths);
+    s += svgPass('Streaks-heavy', INK, 0.8, heavyPaths);
+    s += svgPass('Channel', RED, 1.1, channelPath ? [channelPath] : []);
+    s += `  <g id="Signature" inkscape:groupmode="layer" inkscape:label="Signature">\n` +
+        `    <text x="${PAD}" y="${CS - PAD + 44}" font-family="monospace" font-size="26" ` +
+        `fill="${INK}">${signatureText()}</text>\n  </g>\n`;
+    s += '</svg>\n';
+    return s;
+}
+
+function exportSVG() {
+    const blob = new Blob([buildSVG()], { type: 'image/svg+xml' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `drift-seed${state.masterSeed}.svg`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function exportPNG(scale) {
+    pixelDensity(scale);
+    renderAll();
+    saveCanvas(`drift-seed${state.masterSeed}-${scale}x`, 'png');
+    pixelDensity(1);
+    renderAll();
+}
 
 function setup() {
     const c = createCanvas(CS, CS);
