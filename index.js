@@ -185,12 +185,10 @@ function runWaves() {
     depNorm();
     state.paths = [];
     const maxWaves = WAVE_CAP[ui.settle];
-    let prevSum = 0;
     state.wavesRun = 0;
     for (let w = 0; w < maxWaves; w++) {
         // snapshot deposition before this wave for settle delta
         const before = state.dep.slice();
-        const beforeSum = sumArr(before);
         // Phase 1: advect ALL particles on the frozen field (no splatting yet)
         const starts = waveStarts(w);
         const wavePaths = [];
@@ -211,7 +209,6 @@ function runWaves() {
         let diff = 0;
         for (let i = 0; i < state.dep.length; i++) diff += Math.abs(state.dep[i] - before[i]);
         const delta = diff / Math.max(afterSum, 1e-9);
-        prevSum = afterSum;
         if (w > 0 && delta < SETTLE_EPS) break;
     }
 }
