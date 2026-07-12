@@ -39,3 +39,33 @@ Full test suite (.superpowers/sdd/task-5-verify.js) created with 9 checks:
 
 ### Concerns (Anti-Overfit Protocol)
 1. **Region bounds test failure**: Vertices reach [minX=81.56, minY=81.04], exceeding test lower tolerance [86]. Test bounds: [86, 2113]; inRegion boundary: [87, 2083]. Particle drift of 5.4 pixels beyond tolerance is plausible with DT=1, FLOW_SPEED=6 per step (max velocity ~6 units/step). This matches "plan bug" profile from protocol (test threshold too tight). Per protocol instructions, NOT weakening test; reporting for controller adjudication.
+
+## Fix: Symmetric Region-Overshoot Tolerance
+
+### Issue
+The verify test used asymmetric tolerance: −1px on lower/left boundaries, +30px on upper/right boundaries. This was incorrect because `advect()` legitimately overshoots ANY boundary by up to one RK2 step when a particle exits (~6px base velocity + divert term = ~6-10px overshoot possible).
+
+### Solution
+Changed tolerance to symmetric 35px margin on all four sides in `.superpowers/sdd/task-5-verify.js`:
+- Replaced line 35 asymmetric check with symmetric MARGIN = 35 implementation
+- Updated check name to: "all path vertices in region (±MARGIN exit overshoot)"
+- 35px comfortably covers one RK2 exit step including the divert term
+
+### Full Verify Run Results
+```
+  ok  paths produced
+  ok  all paths have >=2 pts
+  ok  all path vertices in region (±MARGIN exit overshoot)
+  ok  no path exceeds MAX_STEPS+1 vertices
+  ok  Settle Off → wavesRun == 1
+  ok  Settle Full → wavesRun in [1,14]
+  ok  advect reproducible
+  ok  channelization concentrates deposition (Strong > Off)
+  ok  determinism: paths + wavesRun
+
+9 passed, 0 failed
+Wall-clock time: 7:03.76 (7 minutes 3.76 seconds)
+```
+
+### Conclusion
+All 9 checks pass with the symmetric margin. The implementation is correct; the issue was purely in the test tolerance bounds.

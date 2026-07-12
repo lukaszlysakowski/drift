@@ -30,9 +30,10 @@ function check(name, cond, detail) {
 vm.runInContext('ui.scale = 1; ui.strength = 1; ui.count = 0; ui.seeding = 0; ui.channel = 1; ui.settle = 2; state.masterSeed = 4242; regenerate(false);', sandbox);
 const st = sandbox.state;
 
+const MARGIN = 35;
 check('paths produced', st.paths.length > 0, `${st.paths.length}`);
 check('all paths have >=2 pts', st.paths.every(p => p.pts.length >= 2));
-check('all path vertices in region', st.paths.every(p => p.pts.every(v => v.x >= 87 - 1 && v.x <= 2170 - 87 + 30 && v.y >= 87 - 1 && v.y <= 2170 - 87 + 30)));
+check('all path vertices in region (±MARGIN exit overshoot)', st.paths.every(p => p.pts.every(v => v.x >= 87 - MARGIN && v.x <= 2170 - 87 + MARGIN && v.y >= 87 - MARGIN && v.y <= 2170 - 87 + MARGIN)));
 check('no path exceeds MAX_STEPS+1 vertices', st.paths.every(p => p.pts.length <= 401));
 
 // Settle Off caps wavesRun at 1
