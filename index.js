@@ -124,6 +124,9 @@ function inRegion(x, y) {
     return x >= PAD && x <= CS - PAD && y >= PAD && y <= CS - PAD;
 }
 
+// Task 6: Classify paths — heavy/light classes + red main channel
+const HEAVY_THRESH = 0.28;
+
 function waveStarts(w) {
     const rng = seededRng((state.masterSeed + w * 9161) >>> 0);
     const P = COUNTS[ui.count];
@@ -212,7 +215,19 @@ function runWaves() {
         if (w > 0 && delta < SETTLE_EPS) break;
     }
 }
-function classifyPaths() {}
+function classifyPaths() {
+    let bestIdx = -1, bestTotal = -1;
+    for (let i = 0; i < state.paths.length; i++) {
+        const p = state.paths[i];
+        let sum = 0;
+        for (const v of p.pts) sum += depAt(v.x, v.y);
+        p.totalD = sum;
+        p.meanD = p.pts.length ? sum / p.pts.length : 0;
+        p.cls = p.meanD >= HEAVY_THRESH ? 1 : 0;
+        if (sum > bestTotal) { bestTotal = sum; bestIdx = i; }
+    }
+    state.channelIdx = bestIdx;
+}
 
 function regenerate(newSeed) {
     if (newSeed) state.masterSeed = Math.floor(Math.random() * 1e9);
