@@ -71,8 +71,8 @@ check('slow reduces along-flow speed', slowed[0] < slowed[1] && slowed[0] >= slo
 const diverted = vm.runInContext(`
     (function () {
         ui.channel = 2;
-        depReset(); for (let i=0;i<60;i++) depSplat(1200,1000); depSmooth(); depNorm();
-        const x = 1150, y = 1000; // beside the pile → nonzero gradient
+        depReset(); for (let i=0;i<60;i++) depSplat(900,900); depSmooth(); depNorm();
+        const x = 890, y = 900; // beside the pile → nonzero gradient
         const b = baseField(x,y), t = bentField(x,y);
         const bs = Math.hypot(b.vx,b.vy);
         // perpendicular component of t relative to base direction

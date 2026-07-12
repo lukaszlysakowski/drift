@@ -101,7 +101,7 @@ function bentField(x, y) {
     const g = depGrad(x, y);
     const gm = Math.hypot(g.gx, g.gy);
     let tx = 0, ty = 0;
-    if (gm > 1e-9) {
+    if (gm > 1e-6) {
         // rot90 of unit gradient: (−gy, gx)
         const ux = -g.gy / gm, uy = g.gx / gm;
         const speed = Math.hypot(v.vx, v.vy);

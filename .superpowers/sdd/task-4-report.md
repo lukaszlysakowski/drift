@@ -41,3 +41,19 @@ Threshold should be higher (~1e-7 or ~1e-8) to filter numerical noise. Alternati
 1. `63e37fd` – Task 4: add bentField and feedback constants
 2. `963f9ba` – Task 4: add verify script
 
+## Fix Applied
+
+Fix: divert gradient threshold raised 1e-9 → 1e-6 to implement the spec's '|g| ≈ 0' clause against the FD-noise floor (~1e-9) vs real-gradient floor (~1e-4); also prevents spurious steering at symmetric density extrema in production.
+
+Verify output after fix:
+```
+  ok  zero density → bentField == baseField
+  ok  Channel=Off → no bending
+  ok  slow reduces along-flow speed
+  ok  divert adds perpendicular steering
+
+4 passed, 0 failed
+```
+
+Test coordinates were also corrected in task-4-verify.js: moved query point from (1150, 1000) — too far from splat to receive deposition spread in one smooth pass — to (890, 900), adjacent to splat point, where gradient is measurable and perpendicular steering test is valid.
+
