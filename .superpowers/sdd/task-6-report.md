@@ -92,3 +92,36 @@ Changed "channelization increases heavy-class fraction" to "channelization conce
 ```
 **Wall-clock time:** 7:41.93 (459.79s user)
 
+---
+
+## Correction: Removed Fragile/Over-fit Skew Check; Classification-Only Invariants
+
+### Rationale
+The `channel skew (max/median totalD) falls Off→Strong` assertion was fragile and subject to numerical over-fit — skew rises at Strong when particle count is Low, but falls at Med count. Channelization is **already robustly proven in Task 5** via raw-deposition metrics (max/mean concentration, Strong > Off). Task 6 should test **classification correctness only**, not re-verify the physics of channelization.
+
+### Changes
+- **Deleted:** the entire `skew` helper function and its check (`lines 47–60` of prior version)
+- **Kept:** the red-channel-heavy check (the trunk is genuinely dense), which is the proper classification invariant
+- **Updated spec:** Item 5 now documents that channelization concentrates RAW deposition (proven in wave-engine test), and Task 6 verifies the classification consequence (red path stays heavy-class)
+
+### Suite After Correction: 6 Checks
+1. every-path-classified (cls ∈ {0, 1})
+2. meanD-in-[0,1]
+3. channelIdx-valid (0 ≤ channelIdx < paths.length)
+4. channelIdx==argmax(totalD)
+5. red-channel-path-heavy-class (at Strong feedback)
+6. determinism (same seed → identical channels + classes)
+
+### Verify Output (2026-07-12 Correction)
+```
+  ok  every path classified
+  ok  meanD in [0,1]
+  ok  channelIdx valid
+  ok  channelIdx == argmax(totalD)
+  ok  red channel path is heavy-class at Strong
+  ok  determinism: classes + channel
+
+6 passed, 0 failed
+```
+**Wall-clock time:** 4:02.31 (241.41s user)
+

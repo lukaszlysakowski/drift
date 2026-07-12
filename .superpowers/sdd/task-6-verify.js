@@ -44,21 +44,6 @@ const isMax = vm.runInContext(`
 `, sandbox);
 check('channelIdx == argmax(totalD)', isMax);
 
-// channelization signature: skew (max/median of path totalD) falls Off→Strong.
-// (strong feedback concentrates deposition and raises depMax; normalized totalD values
-//  decrease for tributary paths, pulling the median down relative to max per-wave output.
-//  heavy FRACTION also falls under Strong — fewer paths exceed HEAVY_THRESH.)
-const skew = (ch) => vm.runInContext(`
-    (function () {
-        ui.channel = ${ch}; ui.count = 1; ui.settle = 1; state.masterSeed = 707; regenerate(false);
-        const totals = state.paths.map(p => p.totalD).sort((a, b) => a - b);
-        const median = totals[Math.floor(totals.length / 2)];
-        const max = totals[totals.length - 1];
-        return max / Math.max(median, 1e-9);
-    })()
-`, sandbox);
-check('channel skew (max/median totalD) falls Off→Strong', skew(0) > skew(2), `off ${skew(0).toFixed(2)} vs strong ${skew(2).toFixed(2)}`);
-
 // the red channel (argmax totalD) path is always heavy-classified — the trunk is genuinely dense
 vm.runInContext('ui.channel = 2; ui.count = 1; ui.settle = 1; state.masterSeed = 707; regenerate(false);', sandbox);
 check('red channel path is heavy-class at Strong', sandbox.state.paths[sandbox.state.channelIdx].cls === 1);
