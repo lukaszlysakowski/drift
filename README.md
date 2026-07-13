@@ -1,6 +1,6 @@
 # Drift
 
-> *A trio of self-referential systems — [Second Reading](https://github.com/lukaszlysakowski/second-reading) rereads itself, [Interference](https://github.com/lukaszlysakowski/interference) tunes itself, **Drift remembers itself**.*
+> *[Second Reading](https://github.com/lukaszlysakowski/second-reading) rereads itself, [Interference](https://github.com/lukaszlysakowski/interference) tunes itself, **Drift remembers itself** — and [Attrition](https://github.com/lukaszlysakowski/attrition) forgets itself.*
 
 A curl-noise field that transports its own history. Particles drift downstream, each
 leaving its full trajectory as a streakline; where they pass they deposit density, and that
